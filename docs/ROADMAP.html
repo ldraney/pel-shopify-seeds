@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEL Shopify Seeds - Roadmap</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        h1, h2, h3 { color: #333; }
+        .phase {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .phase-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .phase-number {
+            background: #007bff;
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .phase.complete .phase-number { background: #28a745; }
+        .phase.current .phase-number { background: #ffc107; color: #333; }
+        .issue-link {
+            background: #e9ecef;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        .issue-link:hover { background: #dee2e6; }
+        .deliverables {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+        .diagram-container {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        code {
+            background: #e9ecef;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 0.75rem; text-align: left; }
+        th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>PEL Shopify Seeds - Roadmap</h1>
+
+    <p>This document outlines the implementation phases for the pel-shopify-seeds repository.</p>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+gantt
+    title Implementation Phases
+    dateFormat  YYYY-MM-DD
+    section Phase 1
+    Documentation & Architecture     :done, p1, 2024-01-01, 1d
+    section Phase 2
+    First Release (CSV)              :active, p2, after p1, 1d
+    section Phase 3
+    Collections Schema               :p3a, after p2, 2d
+    Inventory Schema                 :p3b, after p2, 2d
+    section Phase 4
+    pel-shopify-views integration    :p4, after p3a p3b, 3d
+        </pre>
+    </div>
+
+    <h2>Phase Overview</h2>
+
+    <div class="phase complete">
+        <div class="phase-header">
+            <div class="phase-number">1</div>
+            <h3>Documentation & Architecture</h3>
+            <span style="color: #28a745; font-weight: bold;">COMPLETE</span>
+        </div>
+        <p>Establish the foundation with clear architecture documentation.</p>
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li><code>docs/architecture.html</code> - System architecture with Mermaid diagrams</li>
+                <li>Shopify Admin API reference (queries, types, fields)</li>
+                <li>CSV vs API data split analysis</li>
+                <li>SQLite schema design for pel-shopify-views</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="phase current">
+        <div class="phase-header">
+            <div class="phase-number">2</div>
+            <h3>First Release</h3>
+            <a href="https://github.com/ldraney/pel-shopify-seeds/issues/2" class="issue-link">Issue #2</a>
+        </div>
+        <p>Create the first GitHub release with the product CSV export.</p>
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>Validated <code>data/products.csv</code></li>
+                <li>GitHub Release v0.1.0 with CSV attached</li>
+                <li>Release process documented in README</li>
+            </ul>
+            <strong>Agent Instructions:</strong>
+            <ul>
+                <li>The CSV is already in <code>data/products.csv</code></li>
+                <li>Validate it has expected columns (65 total, see architecture.html)</li>
+                <li>Use <code>gh release create v0.1.0 data/products.csv</code></li>
+                <li>Add release notes describing contents</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="phase">
+        <div class="phase-header">
+            <div class="phase-number">3</div>
+            <h3>API Schemas</h3>
+            <a href="https://github.com/ldraney/pel-shopify-seeds/issues/1" class="issue-link">Issue #1</a>
+            <a href="https://github.com/ldraney/pel-shopify-seeds/issues/3" class="issue-link">Issue #3</a>
+        </div>
+        <p>Define JSON schemas for data that requires API calls.</p>
+
+        <h4>3a. Collections Schema (Issue #1)</h4>
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li><code>api/collections.schema.json</code> - JSON Schema definition</li>
+                <li><code>api/collections.json</code> - Example collection data</li>
+            </ul>
+            <strong>Agent Instructions:</strong>
+            <ul>
+                <li>Reference <code>docs/architecture.html</code> Collection type</li>
+                <li>Schema must support:
+                    <ul>
+                        <li>Manual collections (explicit product list)</li>
+                        <li>Smart collections (rule-based with <code>ruleSet</code>)</li>
+                        <li>Collection metafields</li>
+                    </ul>
+                </li>
+                <li>Use JSON Schema draft-07</li>
+                <li>Validate against Shopify's <code>CollectionInput</code> type</li>
+            </ul>
+            <strong>Example Structure:</strong>
+            <pre><code>{
+  "collections": [
+    {
+      "handle": "summer-sale",
+      "title": "Summer Sale",
+      "descriptionHtml": "&lt;p&gt;Hot deals!&lt;/p&gt;",
+      "sortOrder": "BEST_SELLING",
+      "ruleSet": {
+        "appliedDisjunctively": false,
+        "rules": [
+          { "column": "TAG", "relation": "EQUALS", "condition": "sale" }
+        ]
+      }
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <h4>3b. Inventory Schema (Issue #3)</h4>
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li><code>api/inventory.schema.json</code> - JSON Schema definition</li>
+                <li><code>api/inventory.json</code> - Example inventory data</li>
+            </ul>
+            <strong>Agent Instructions:</strong>
+            <ul>
+                <li>Reference <code>docs/architecture.html</code> InventoryItem and InventoryLevel types</li>
+                <li>Schema must support:
+                    <ul>
+                        <li>SKU-based inventory identification</li>
+                        <li>Multiple locations per SKU</li>
+                        <li>Quantity per location</li>
+                        <li>Optional: countryCodeOfOrigin, harmonizedSystemCode</li>
+                    </ul>
+                </li>
+            </ul>
+            <strong>Example Structure:</strong>
+            <pre><code>{
+  "inventory": [
+    {
+      "sku": "PROD-001-SM",
+      "tracked": true,
+      "countryCodeOfOrigin": "US",
+      "levels": [
+        { "locationName": "Warehouse A", "quantity": 100 },
+        { "locationName": "Store NYC", "quantity": 25 }
+      ]
+    }
+  ]
+}</code></pre>
+        </div>
+    </div>
+
+    <div class="phase">
+        <div class="phase-header">
+            <div class="phase-number">4</div>
+            <h3>Integration with pel-shopify-views</h3>
+        </div>
+        <p>Ensure the seeds repo output is consumable by pel-shopify-views.</p>
+        <div class="deliverables">
+            <strong>Deliverables:</strong>
+            <ul>
+                <li>GitHub Action to auto-trigger pel-shopify-views on release</li>
+                <li>Release includes all data: CSV + JSON API definitions</li>
+                <li>Documentation for downstream consumption</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>File Structure After Completion</h2>
+    <pre><code>pel-shopify-seeds/
+├── .github/
+│   └── workflows/
+│       └── release.yml          # Triggers pel-shopify-views
+├── .gitignore
+├── CLAUDE.md
+├── README.md
+├── data/                        # gitignored
+│   └── products.csv
+├── api/
+│   ├── collections.schema.json
+│   ├── collections.json
+│   ├── inventory.schema.json
+│   └── inventory.json
+└── docs/
+    ├── architecture.html
+    └── ROADMAP.html</code></pre>
+
+    <h2>Dependencies Between Issues</h2>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    I2[Issue #2: First Release] --> I1[Issue #1: Collections Schema]
+    I2 --> I3[Issue #3: Inventory Schema]
+    I1 --> I4[Phase 4: Integration]
+    I3 --> I4
+
+    style I2 fill:#ffc107
+    style I1 fill:#e9ecef
+    style I3 fill:#e9ecef
+    style I4 fill:#e9ecef
+        </pre>
+    </div>
+
+    <p><strong>Issue #2 should be completed first</strong> - it establishes the release process that Issues #1 and #3 will build upon.</p>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default'
+        });
+    </script>
+</body>
+</html>
