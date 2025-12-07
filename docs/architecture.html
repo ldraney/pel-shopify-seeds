@@ -467,6 +467,201 @@ sequenceDiagram
         <p>Do you have staging/production stores? If so, how does this pipeline handle them?</p>
     </div>
 
+    <h2>Shopify Admin GraphQL API Reference</h2>
+    <p>This section documents the key queries available for fetching product and catalog data.</p>
+
+    <h3>Product Queries</h3>
+    <table>
+        <thead>
+            <tr><th>Query</th><th>Description</th><th>Scope Required</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>products</code></td><td>List all products with pagination, filtering, sorting</td><td>read_products</td></tr>
+            <tr><td><code>product(id: ID!)</code></td><td>Get single product by GID</td><td>read_products</td></tr>
+            <tr><td><code>productVariants</code></td><td>List all variants across products</td><td>read_products</td></tr>
+            <tr><td><code>productVariant(id: ID!)</code></td><td>Get single variant by GID</td><td>read_products</td></tr>
+            <tr><td><code>productsCount</code></td><td>Count products (max 10000)</td><td>read_products</td></tr>
+            <tr><td><code>productTypes</code></td><td>List all product types in use</td><td>read_products</td></tr>
+            <tr><td><code>productVendors</code></td><td>List all vendors in use</td><td>read_products</td></tr>
+            <tr><td><code>productTags</code></td><td>List all tags in use (max 5000)</td><td>read_products</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Collection Queries</h3>
+    <table>
+        <thead>
+            <tr><th>Query</th><th>Description</th><th>Scope Required</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>collections</code></td><td>List all collections with pagination</td><td>read_products</td></tr>
+            <tr><td><code>collection(id: ID!)</code></td><td>Get single collection by GID</td><td>read_products</td></tr>
+            <tr><td><code>collectionByIdentifier</code></td><td>Get collection by handle or other identifier</td><td>read_products</td></tr>
+            <tr><td><code>collectionsCount</code></td><td>Count collections (max 10000)</td><td>read_products</td></tr>
+            <tr><td><code>collectionRulesConditions</code></td><td>List rules available for smart collections</td><td>read_products</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Inventory Queries</h3>
+    <table>
+        <thead>
+            <tr><th>Query</th><th>Description</th><th>Scope Required</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>inventoryItems</code></td><td>List inventory items with pagination</td><td>read_inventory + read_products</td></tr>
+            <tr><td><code>inventoryItem(id: ID!)</code></td><td>Get single inventory item</td><td>read_inventory + read_products</td></tr>
+            <tr><td><code>inventoryLevel(id: ID!)</code></td><td>Get inventory at specific location</td><td>read_inventory</td></tr>
+            <tr><td><code>locations</code></td><td>List all inventory locations</td><td>read_locations</td></tr>
+            <tr><td><code>location(id: ID)</code></td><td>Get single location</td><td>read_locations</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Metafield Queries</h3>
+    <table>
+        <thead>
+            <tr><th>Query</th><th>Description</th><th>Scope Required</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><code>metafieldDefinitions</code></td><td>List metafield definitions by owner type</td><td>(varies by owner)</td></tr>
+            <tr><td><code>metafieldDefinition</code></td><td>Get single definition by identifier</td><td>(varies by owner)</td></tr>
+            <tr><td><code>metafieldDefinitionTypes</code></td><td>List available metafield types</td><td>-</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Key Object Fields</h3>
+
+    <details>
+        <summary><strong>Product</strong> - Click to expand</summary>
+        <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>ID!</td><td>Global ID (gid://shopify/Product/...)</td></tr>
+                <tr><td>handle</td><td>String!</td><td>URL-friendly identifier</td></tr>
+                <tr><td>title</td><td>String!</td><td>Product name</td></tr>
+                <tr><td>descriptionHtml</td><td>HTML!</td><td>Full HTML description</td></tr>
+                <tr><td>vendor</td><td>String!</td><td>Vendor name</td></tr>
+                <tr><td>productType</td><td>String!</td><td>Product type</td></tr>
+                <tr><td>tags</td><td>[String!]!</td><td>Array of tags</td></tr>
+                <tr><td>status</td><td>ProductStatus!</td><td>ACTIVE, ARCHIVED, DRAFT</td></tr>
+                <tr><td>category</td><td>TaxonomyCategory</td><td>Shopify product taxonomy category</td></tr>
+                <tr><td>seo</td><td>SEO!</td><td>SEO title and description</td></tr>
+                <tr><td>options</td><td>[ProductOption!]!</td><td>Product options (Size, Color, etc.)</td></tr>
+                <tr><td>variants</td><td>ProductVariantConnection!</td><td>All variants</td></tr>
+                <tr><td>media</td><td>MediaConnection!</td><td>Images, videos, 3D models</td></tr>
+                <tr><td>collections</td><td>CollectionConnection!</td><td>Collections containing this product</td></tr>
+                <tr><td>metafields</td><td>MetafieldConnection!</td><td>Custom metafields</td></tr>
+                <tr><td>priceRangeV2</td><td>ProductPriceRangeV2!</td><td>Min/max price range</td></tr>
+                <tr><td>createdAt</td><td>DateTime!</td><td>Creation timestamp</td></tr>
+                <tr><td>updatedAt</td><td>DateTime!</td><td>Last update timestamp</td></tr>
+                <tr><td>publishedAt</td><td>DateTime</td><td>When published to online store</td></tr>
+            </tbody>
+        </table>
+    </details>
+
+    <details>
+        <summary><strong>ProductVariant</strong> - Click to expand</summary>
+        <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>ID!</td><td>Global ID</td></tr>
+                <tr><td>sku</td><td>String</td><td>Stock Keeping Unit</td></tr>
+                <tr><td>title</td><td>String!</td><td>Variant title (e.g., "Small / Red")</td></tr>
+                <tr><td>price</td><td>Money!</td><td>Current price</td></tr>
+                <tr><td>compareAtPrice</td><td>Money</td><td>Original/compare price</td></tr>
+                <tr><td>barcode</td><td>String</td><td>UPC, ISBN, etc.</td></tr>
+                <tr><td>selectedOptions</td><td>[SelectedOption!]!</td><td>Option name/value pairs</td></tr>
+                <tr><td>inventoryQuantity</td><td>Int</td><td>Total sellable quantity</td></tr>
+                <tr><td>inventoryPolicy</td><td>ProductVariantInventoryPolicy!</td><td>DENY or CONTINUE when out of stock</td></tr>
+                <tr><td>inventoryItem</td><td>InventoryItem!</td><td>Link to inventory details</td></tr>
+                <tr><td>image</td><td>Image</td><td>Variant-specific image</td></tr>
+                <tr><td>taxable</td><td>Boolean!</td><td>Whether taxable</td></tr>
+                <tr><td>metafields</td><td>MetafieldConnection!</td><td>Variant metafields</td></tr>
+            </tbody>
+        </table>
+    </details>
+
+    <details>
+        <summary><strong>InventoryItem</strong> - Click to expand</summary>
+        <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>ID!</td><td>Global ID</td></tr>
+                <tr><td>sku</td><td>String</td><td>SKU</td></tr>
+                <tr><td>tracked</td><td>Boolean!</td><td>Whether inventory is tracked</td></tr>
+                <tr><td>unitCost</td><td>MoneyV2</td><td>Cost per item</td></tr>
+                <tr><td>countryCodeOfOrigin</td><td>CountryCode</td><td>ISO country code</td></tr>
+                <tr><td>provinceCodeOfOrigin</td><td>String</td><td>Province/state code</td></tr>
+                <tr><td>harmonizedSystemCode</td><td>String</td><td>HS tariff code (6-13 digits)</td></tr>
+                <tr><td>requiresShipping</td><td>Boolean!</td><td>Physical vs digital</td></tr>
+                <tr><td>inventoryLevels</td><td>InventoryLevelConnection!</td><td>Quantities per location</td></tr>
+                <tr><td>measurement</td><td>InventoryItemMeasurement!</td><td>Weight and dimensions</td></tr>
+            </tbody>
+        </table>
+    </details>
+
+    <details>
+        <summary><strong>Collection</strong> - Click to expand</summary>
+        <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>ID!</td><td>Global ID</td></tr>
+                <tr><td>handle</td><td>String!</td><td>URL-friendly identifier</td></tr>
+                <tr><td>title</td><td>String!</td><td>Collection name</td></tr>
+                <tr><td>descriptionHtml</td><td>HTML!</td><td>Full HTML description</td></tr>
+                <tr><td>image</td><td>Image</td><td>Collection image</td></tr>
+                <tr><td>seo</td><td>SEO!</td><td>SEO title and description</td></tr>
+                <tr><td>sortOrder</td><td>CollectionSortOrder!</td><td>Product sort order</td></tr>
+                <tr><td>ruleSet</td><td>CollectionRuleSet</td><td>Smart collection rules (if automated)</td></tr>
+                <tr><td>products</td><td>ProductConnection!</td><td>Products in collection</td></tr>
+                <tr><td>productsCount</td><td>Count</td><td>Number of products</td></tr>
+                <tr><td>metafields</td><td>MetafieldConnection!</td><td>Collection metafields</td></tr>
+            </tbody>
+        </table>
+    </details>
+
+    <details>
+        <summary><strong>Location</strong> - Click to expand</summary>
+        <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>id</td><td>ID!</td><td>Global ID</td></tr>
+                <tr><td>name</td><td>String!</td><td>Location name</td></tr>
+                <tr><td>address</td><td>LocationAddress!</td><td>Full address details</td></tr>
+                <tr><td>isActive</td><td>Boolean!</td><td>Whether location is active</td></tr>
+                <tr><td>fulfillsOnlineOrders</td><td>Boolean!</td><td>Can fulfill online orders</td></tr>
+                <tr><td>shipsInventory</td><td>Boolean!</td><td>Used for shipping rate calculation</td></tr>
+                <tr><td>inventoryLevels</td><td>InventoryLevelConnection!</td><td>Inventory at this location</td></tr>
+            </tbody>
+        </table>
+    </details>
+
+    <h3>CSV vs API: Updated Analysis</h3>
+
+    <div class="note">
+        <strong>Key Finding:</strong> Your CSV export already includes metafields! The Shopify product CSV format supports metafields as additional columns with the naming pattern <code>product.metafields.namespace.key</code>.
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>Data</th><th>In CSV?</th><th>Needs API?</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Products (all basic fields)</td><td>Yes</td><td>No</td><td>65 columns in export</td></tr>
+            <tr><td>Variants</td><td>Yes</td><td>No</td><td>Multiple rows per product</td></tr>
+            <tr><td>Product Metafields</td><td>Yes</td><td>No</td><td>As additional columns</td></tr>
+            <tr><td>Product Images</td><td>Yes</td><td>No</td><td>Image Src, Position, Alt Text</td></tr>
+            <tr><td>SEO</td><td>Yes</td><td>No</td><td>SEO Title, SEO Description</td></tr>
+            <tr><td>Google Shopping</td><td>Yes</td><td>No</td><td>10 columns</td></tr>
+            <tr class="api-needed"><td><strong>Collections</strong></td><td>No</td><td><strong>Yes</strong></td><td>Separate entity, not in product CSV</td></tr>
+            <tr class="api-needed"><td><strong>Multi-location Inventory</strong></td><td>No</td><td><strong>Yes</strong></td><td>CSV has single qty, not per-location</td></tr>
+            <tr class="api-needed"><td><strong>Collection Metafields</strong></td><td>No</td><td><strong>Yes</strong></td><td>Collections are API-only</td></tr>
+            <tr class="api-needed"><td><strong>InventoryItem Details</strong></td><td>Partial</td><td><strong>Yes</strong></td><td>Cost in CSV, but HS codes, country of origin need API</td></tr>
+        </tbody>
+    </table>
+
+    <style>
+        tr.api-needed td { background: #fff3cd; }
+    </style>
+
     <h2>Next Steps</h2>
     <ol>
         <li>Finalize which data types need API vs CSV</li>
