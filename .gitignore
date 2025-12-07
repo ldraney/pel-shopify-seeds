@@ -1,2 +1,3 @@
 # Data files go in releases, not in repo
 data/
+.env
