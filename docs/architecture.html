@@ -117,6 +117,10 @@ flowchart TD
 
     <h3>What Goes Where: CSV vs API</h3>
 
+    <div class="note">
+        <strong>Good news!</strong> Shopify's CSV export includes metafields as columns. This means most data can go through CSV import, simplifying the architecture.
+    </div>
+
     <table>
         <thead>
             <tr>
@@ -137,41 +141,101 @@ flowchart TD
                 <td>Bulk import supported</td>
             </tr>
             <tr>
-                <td>Basic Product Images</td>
+                <td>Product Images</td>
                 <td>CSV</td>
-                <td>Image URLs in CSV work</td>
+                <td>Image Src, Position, Alt Text columns</td>
             </tr>
             <tr>
                 <td>Metafields</td>
-                <td>API</td>
-                <td>Not supported in standard CSV import</td>
-            </tr>
-            <tr>
-                <td>Collections</td>
-                <td>API</td>
-                <td>Smart/automated collections need API</td>
-            </tr>
-            <tr>
-                <td>Product Tags (bulk)</td>
                 <td>CSV</td>
-                <td>Comma-separated in CSV</td>
+                <td>Included as columns like <code>product.metafields.namespace.key</code></td>
             </tr>
             <tr>
-                <td>Inventory Locations</td>
-                <td>API</td>
-                <td>Multi-location needs API</td>
+                <td>Product Tags</td>
+                <td>CSV</td>
+                <td>Comma-separated in Tags column</td>
             </tr>
             <tr>
                 <td>Product Options</td>
                 <td>CSV</td>
-                <td>Option1 Name/Value columns</td>
+                <td>Option1/2/3 Name/Value columns</td>
+            </tr>
+            <tr>
+                <td>SEO (Title, Description)</td>
+                <td>CSV</td>
+                <td>SEO Title, SEO Description columns</td>
+            </tr>
+            <tr>
+                <td>Google Shopping attributes</td>
+                <td>CSV</td>
+                <td>Multiple Google Shopping columns</td>
+            </tr>
+            <tr>
+                <td>Collections</td>
+                <td>API</td>
+                <td>Not in product CSV - separate entity</td>
+            </tr>
+            <tr>
+                <td>Multi-location Inventory</td>
+                <td>API</td>
+                <td>CSV only has single Variant Inventory Qty</td>
             </tr>
         </tbody>
     </table>
 
-    <div class="question">
-        <strong>Open Question:</strong> What specific metafields or collection types do you need? This will determine the exact API calls required.
-    </div>
+    <h3>Actual CSV Columns (65 total)</h3>
+    <details>
+        <summary>Click to expand full column list</summary>
+        <table>
+            <thead><tr><th>#</th><th>Column</th><th>Category</th></tr></thead>
+            <tbody>
+                <tr><td>1</td><td>Handle</td><td>Product ID</td></tr>
+                <tr><td>2</td><td>Title</td><td>Product</td></tr>
+                <tr><td>3</td><td>Body (HTML)</td><td>Product</td></tr>
+                <tr><td>4</td><td>Vendor</td><td>Product</td></tr>
+                <tr><td>5</td><td>Product Category</td><td>Product</td></tr>
+                <tr><td>6</td><td>Type</td><td>Product</td></tr>
+                <tr><td>7</td><td>Tags</td><td>Product</td></tr>
+                <tr><td>8</td><td>Published</td><td>Product</td></tr>
+                <tr><td>9-17</td><td>Option1/2/3 Name, Value, Linked To</td><td>Options</td></tr>
+                <tr><td>18</td><td>Variant SKU</td><td>Variant</td></tr>
+                <tr><td>19</td><td>Variant Grams</td><td>Variant</td></tr>
+                <tr><td>20</td><td>Variant Inventory Tracker</td><td>Variant</td></tr>
+                <tr><td>21</td><td>Variant Inventory Qty</td><td>Variant</td></tr>
+                <tr><td>22</td><td>Variant Inventory Policy</td><td>Variant</td></tr>
+                <tr><td>23</td><td>Variant Fulfillment Service</td><td>Variant</td></tr>
+                <tr><td>24</td><td>Variant Price</td><td>Variant</td></tr>
+                <tr><td>25</td><td>Variant Compare At Price</td><td>Variant</td></tr>
+                <tr><td>26</td><td>Variant Requires Shipping</td><td>Variant</td></tr>
+                <tr><td>27</td><td>Variant Taxable</td><td>Variant</td></tr>
+                <tr><td>28-31</td><td>Unit Price Measure fields</td><td>Variant</td></tr>
+                <tr><td>32</td><td>Variant Barcode</td><td>Variant</td></tr>
+                <tr><td>33</td><td>Image Src</td><td>Image</td></tr>
+                <tr><td>34</td><td>Image Position</td><td>Image</td></tr>
+                <tr><td>35</td><td>Image Alt Text</td><td>Image</td></tr>
+                <tr><td>36</td><td>Gift Card</td><td>Product</td></tr>
+                <tr><td>37</td><td>SEO Title</td><td>SEO</td></tr>
+                <tr><td>38</td><td>SEO Description</td><td>SEO</td></tr>
+                <tr><td>39-48</td><td>Google Shopping fields</td><td>Google</td></tr>
+                <tr><td>49</td><td>product.metafields.custom.product_detail_description</td><td>Metafield</td></tr>
+                <tr><td>50</td><td>product.metafields.custom.short_description</td><td>Metafield</td></tr>
+                <tr><td>51</td><td>product.metafields.ingredients.inci_list</td><td>Metafield</td></tr>
+                <tr><td>52</td><td>product.metafields.mm-google-shopping.custom_product</td><td>Metafield</td></tr>
+                <tr><td>53</td><td>product.metafields.product_details.benefits</td><td>Metafield</td></tr>
+                <tr><td>54</td><td>product.metafields.product_details.key_features</td><td>Metafield</td></tr>
+                <tr><td>55</td><td>product.metafields.product_details.skin_type</td><td>Metafield</td></tr>
+                <tr><td>56</td><td>product.metafields.product_details.usage_instructions</td><td>Metafield</td></tr>
+                <tr><td>57</td><td>product.metafields.reviews.rating_count</td><td>Metafield</td></tr>
+                <tr><td>58</td><td>product.metafields.shopify.constitutive-ingredients</td><td>Metafield</td></tr>
+                <tr><td>59</td><td>product.metafields.shopify.package-type</td><td>Metafield</td></tr>
+                <tr><td>60</td><td>Variant Image</td><td>Variant</td></tr>
+                <tr><td>61</td><td>Variant Weight Unit</td><td>Variant</td></tr>
+                <tr><td>62</td><td>Variant Tax Code</td><td>Variant</td></tr>
+                <tr><td>63</td><td>Cost per item</td><td>Variant</td></tr>
+                <tr><td>64</td><td>Status</td><td>Product</td></tr>
+            </tbody>
+        </table>
+    </details>
 
     <h2>Repo 2: pel-shopify-views</h2>
     <p>This repo <strong>transforms</strong> the seed data into a queryable SQLite database.</p>
@@ -205,7 +269,7 @@ flowchart TD
         </pre>
     </div>
 
-    <h3>Proposed SQLite Schema</h3>
+    <h3>Proposed SQLite Schema (Based on Actual CSV)</h3>
 
     <div class="diagram-container">
         <pre class="mermaid">
@@ -215,19 +279,39 @@ erDiagram
         text title
         text body_html
         text vendor
-        text product_type
+        text product_category
+        text type
         text tags
+        boolean published
+        boolean gift_card
+        text seo_title
+        text seo_description
         text status
     }
 
     variants {
         text sku PK
         text product_handle FK
+        text option1_name
         text option1_value
+        text option2_name
         text option2_value
+        text option3_name
+        text option3_value
+        int grams
+        text inventory_tracker
+        int inventory_qty
+        text inventory_policy
+        text fulfillment_service
         real price
         real compare_at_price
-        int inventory_qty
+        boolean requires_shipping
+        boolean taxable
+        text barcode
+        text image_url
+        text weight_unit
+        text tax_code
+        real cost_per_item
     }
 
     images {
@@ -240,26 +324,49 @@ erDiagram
 
     metafields {
         int id PK
-        text owner_handle FK
+        text product_handle FK
         text namespace
         text key
         text value
-        text type
     }
 
-    collections {
-        text handle PK
-        text title
-        text body_html
-        text collection_type
-        text rules_json
+    google_shopping {
+        text product_handle PK
+        text google_category
+        text gender
+        text age_group
+        text mpn
+        text condition
+        text custom_product
+        text label_0
+        text label_1
+        text label_2
+        text label_3
+        text label_4
     }
 
     products ||--o{ variants : "has"
     products ||--o{ images : "has"
     products ||--o{ metafields : "has"
-    collections ||--o{ metafields : "has"
+    products ||--|| google_shopping : "has"
         </pre>
+    </div>
+
+    <div class="note">
+        <strong>Metafields in your export:</strong>
+        <ul>
+            <li><code>custom.product_detail_description</code></li>
+            <li><code>custom.short_description</code></li>
+            <li><code>ingredients.inci_list</code></li>
+            <li><code>mm-google-shopping.custom_product</code></li>
+            <li><code>product_details.benefits</code></li>
+            <li><code>product_details.key_features</code></li>
+            <li><code>product_details.skin_type</code></li>
+            <li><code>product_details.usage_instructions</code></li>
+            <li><code>reviews.rating_count</code></li>
+            <li><code>shopify.constitutive-ingredients</code></li>
+            <li><code>shopify.package-type</code></li>
+        </ul>
     </div>
 
     <h2>Repo 3: pel-shopify-update</h2>
