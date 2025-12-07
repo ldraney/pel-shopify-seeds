@@ -2,6 +2,13 @@
 
 Source of truth for PEL Shopify catalog automation.
 
+## Quick Start for Agents
+
+1. **Read the issue you're assigned** - it has specific tasks and acceptance criteria
+2. **Read `docs/architecture.html`** - contains Shopify API reference and type fields
+3. **Read `docs/ROADMAP.html`** - shows phase dependencies and examples
+4. **Follow conventions below** - especially for commits and ROADMAP updates
+
 ## Architecture
 
 Three-repo pipeline:
@@ -11,10 +18,11 @@ Three-repo pipeline:
 
 ## Key Documentation
 
-- `docs/architecture.html` - System architecture, Mermaid diagrams, Shopify Admin API reference
-- `docs/ROADMAP.html` - Implementation phases, issue dependencies, agent instructions
-
-**READ THESE DOCS BEFORE STARTING ANY ISSUE.**
+| Document | What's In It |
+|----------|--------------|
+| `docs/architecture.html` | System diagrams, Shopify Admin API reference, type fields |
+| `docs/ROADMAP.html` | Implementation phases, Gantt chart, example JSON structures |
+| Issue #4 | Meta issue tracking all implementation |
 
 ## Data Split
 
@@ -32,10 +40,12 @@ Three-repo pipeline:
 ```
 pel-shopify-seeds/
 ├── data/                    # gitignored - goes in releases only
-│   └── products.csv         # Shopify product export
+│   └── products.csv         # Shopify product export (65 columns)
 ├── api/                     # JSON definitions for API-only data
-│   ├── collections.json     # Collection definitions
-│   └── inventory.json       # Multi-location inventory
+│   ├── collections.schema.json
+│   ├── collections.json
+│   ├── inventory.schema.json
+│   └── inventory.json
 ├── docs/
 │   ├── architecture.html    # Architecture + API reference
 │   └── ROADMAP.html         # Implementation roadmap
@@ -43,34 +53,90 @@ pel-shopify-seeds/
 └── CLAUDE.md               # This file
 ```
 
-## Agent Instructions
+## Agent Instructions by Issue
 
-### For Issue #2 (First Release)
-1. Validate `data/products.csv` exists and has 65 columns
-2. Create release: `gh release create v0.1.0 data/products.csv --title "v0.1.0" --notes "Initial product CSV"`
-3. Verify release at https://github.com/ldraney/pel-shopify-seeds/releases
+### Issue #2 (First Release) - DO THIS FIRST
+```bash
+# 1. Validate CSV exists and has 65 columns
+head -1 data/products.csv | tr ',' '\n' | wc -l
 
-### For Issue #1 (Collections Schema)
-1. Read `docs/architecture.html` - find Collection type fields
-2. Create `api/collections.schema.json` (JSON Schema draft-07)
-3. Create `api/collections.json` with example data
-4. Support both manual and smart (rule-based) collections
-5. Include metafields support
+# 2. Count products for release notes
+tail -n +2 data/products.csv | wc -l
 
-### For Issue #3 (Inventory Schema)
-1. Read `docs/architecture.html` - find InventoryItem and InventoryLevel types
-2. Create `api/inventory.schema.json` (JSON Schema draft-07)
-3. Create `api/inventory.json` with example data
-4. Map: SKU -> locations -> quantities
+# 3. Create release
+gh release create v0.1.0 data/products.csv \
+  --title "v0.1.0 - Initial Product Export" \
+  --notes "Initial product CSV with X products, 65 columns"
+
+# 4. Update ROADMAP.html - mark Phase 2 complete
+# 5. Commit and push
+```
+
+### Issue #1 (Collections Schema)
+1. Read `docs/architecture.html` - find **Collection** type fields
+2. Read `docs/ROADMAP.html` - find example JSON structure
+3. Create `api/` directory if needed
+4. Create `api/collections.schema.json` (JSON Schema draft-07)
+5. Create `api/collections.json` with examples of:
+   - Manual collection (explicit product handles)
+   - Smart collection (rule-based with `ruleSet`)
+   - Collection with metafields
+6. Update `docs/ROADMAP.html` - mark Phase 3a complete
+7. Commit and push
+
+### Issue #3 (Inventory Schema)
+1. Read `docs/architecture.html` - find **InventoryItem** and **InventoryLevel** types
+2. Read `docs/ROADMAP.html` - find example JSON structure
+3. Create `api/inventory.schema.json` (JSON Schema draft-07)
+4. Create `api/inventory.json` with examples of:
+   - SKU with multiple locations
+   - InventoryItem fields (countryCodeOfOrigin, harmonizedSystemCode)
+5. Update `docs/ROADMAP.html` - mark Phase 3b complete
+6. Commit and push
 
 ## Conventions
 
-- Use JSON Schema draft-07 for all schema definitions
-- JSON files should be valid and parseable
-- All API definitions go in `api/` directory
-- Data files go in `data/` (gitignored, attached to releases)
-- Documentation uses HTML + Mermaid for diagrams
+### JSON Schema
+- Use JSON Schema **draft-07**
+- Include `$schema` declaration
+- Add `description` fields for documentation
+
+### Git Commits
+- Descriptive commit messages
+- Reference issue number: `Fixes #2` or `Part of #1`
+- Push after completing each issue
+
+### ROADMAP Updates
+**Every issue must update `docs/ROADMAP.html`** to mark its phase complete:
+- Change phase div class from `current` to `complete`
+- Change phase status text to `COMPLETE`
+
+### File Naming
+- Schema files: `{name}.schema.json`
+- Data files: `{name}.json`
+- All API files go in `api/` directory
+
+## Useful Commands
+
+```bash
+# List issues
+gh issue list
+
+# View issue details
+gh issue view 1
+
+# Create a release
+gh release create v0.1.0 file1 file2 --title "Title" --notes "Notes"
+
+# Validate JSON
+python3 -m json.tool api/collections.json
+
+# Check git status
+git status
+```
 
 ## Goal
 
-Complete product catalog updates with all fields mapped in the SQLite schema that pel-shopify-views will create.
+Complete product catalog automation with all fields mapped so that:
+1. pel-shopify-views can build a SQLite database from our releases
+2. pel-shopify-update can sync that database to Shopify
