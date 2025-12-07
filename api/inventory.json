@@ -1,0 +1,91 @@
+{
+  "inventory": [
+    {
+      "sku": "PROD-001-SM",
+      "tracked": true,
+      "countryCodeOfOrigin": "US",
+      "harmonizedSystemCode": "330499",
+      "unitCost": {
+        "amount": "12.50",
+        "currencyCode": "USD"
+      },
+      "requiresShipping": true,
+      "levels": [
+        {
+          "locationName": "Main Warehouse",
+          "available": 100,
+          "onHand": 105,
+          "committed": 5,
+          "incoming": 0
+        },
+        {
+          "locationName": "NYC Store",
+          "available": 25,
+          "onHand": 25,
+          "committed": 0,
+          "incoming": 10
+        }
+      ]
+    },
+    {
+      "sku": "PROD-001-MD",
+      "tracked": true,
+      "countryCodeOfOrigin": "US",
+      "harmonizedSystemCode": "330499",
+      "unitCost": {
+        "amount": "12.50",
+        "currencyCode": "USD"
+      },
+      "requiresShipping": true,
+      "levels": [
+        {
+          "locationName": "Main Warehouse",
+          "available": 50,
+          "onHand": 50,
+          "committed": 0,
+          "incoming": 0
+        }
+      ]
+    },
+    {
+      "sku": "PROD-002-LG",
+      "tracked": true,
+      "countryCodeOfOrigin": "CN",
+      "provinceCodeOfOrigin": "GD",
+      "harmonizedSystemCode": "3304990000",
+      "unitCost": {
+        "amount": "8.00",
+        "currencyCode": "USD"
+      },
+      "requiresShipping": true,
+      "levels": [
+        {
+          "locationName": "Main Warehouse",
+          "available": 200,
+          "onHand": 210,
+          "committed": 10,
+          "incoming": 50
+        },
+        {
+          "locationName": "LA Distribution Center",
+          "available": 75,
+          "onHand": 80,
+          "committed": 5,
+          "incoming": 0
+        }
+      ]
+    },
+    {
+      "sku": "DIGITAL-001",
+      "tracked": false,
+      "requiresShipping": false,
+      "levels": [
+        {
+          "locationName": "Main Warehouse",
+          "available": 0,
+          "onHand": 0
+        }
+      ]
+    }
+  ]
+}

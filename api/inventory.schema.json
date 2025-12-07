@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ldraney/pel-shopify-seeds/api/inventory.schema.json",
+  "title": "Inventory Schema",
+  "description": "JSON Schema for multi-location inventory data compatible with Shopify Admin API",
+  "type": "object",
+  "required": ["inventory"],
+  "properties": {
+    "inventory": {
+      "type": "array",
+      "description": "Array of inventory items keyed by SKU",
+      "items": {
+        "$ref": "#/definitions/inventoryItem"
+      }
+    }
+  },
+  "definitions": {
+    "inventoryItem": {
+      "type": "object",
+      "description": "Inventory item representing a variant's stock information",
+      "required": ["sku", "tracked", "levels"],
+      "properties": {
+        "sku": {
+          "type": "string",
+          "description": "Stock Keeping Unit - unique identifier for the variant"
+        },
+        "tracked": {
+          "type": "boolean",
+          "description": "Whether inventory quantity is tracked for this item"
+        },
+        "countryCodeOfOrigin": {
+          "type": "string",
+          "description": "ISO 3166-1 alpha-2 country code where the item was manufactured",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "provinceCodeOfOrigin": {
+          "type": "string",
+          "description": "Province or state code where the item was manufactured"
+        },
+        "harmonizedSystemCode": {
+          "type": "string",
+          "description": "Harmonized System tariff code (6-13 digits) for customs",
+          "pattern": "^[0-9]{6,13}$"
+        },
+        "unitCost": {
+          "$ref": "#/definitions/money",
+          "description": "Cost per item for profit calculations"
+        },
+        "requiresShipping": {
+          "type": "boolean",
+          "description": "Whether this is a physical item that requires shipping"
+        },
+        "levels": {
+          "type": "array",
+          "description": "Inventory quantities at each location",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/inventoryLevel"
+          }
+        }
+      }
+    },
+    "inventoryLevel": {
+      "type": "object",
+      "description": "Inventory quantity at a specific location",
+      "required": ["locationName", "available"],
+      "properties": {
+        "locationName": {
+          "type": "string",
+          "description": "Name of the inventory location"
+        },
+        "available": {
+          "type": "integer",
+          "description": "Quantity available for sale",
+          "minimum": 0
+        },
+        "onHand": {
+          "type": "integer",
+          "description": "Total quantity physically at location (includes reserved)",
+          "minimum": 0
+        },
+        "committed": {
+          "type": "integer",
+          "description": "Quantity committed to unfulfilled orders",
+          "minimum": 0
+        },
+        "incoming": {
+          "type": "integer",
+          "description": "Quantity incoming from transfers or purchase orders",
+          "minimum": 0
+        }
+      }
+    },
+    "money": {
+      "type": "object",
+      "description": "Monetary value with currency",
+      "required": ["amount", "currencyCode"],
+      "properties": {
+        "amount": {
+          "type": "string",
+          "description": "Decimal amount as string to preserve precision",
+          "pattern": "^[0-9]+(\\.[0-9]{1,2})?$"
+        },
+        "currencyCode": {
+          "type": "string",
+          "description": "ISO 4217 currency code",
+          "pattern": "^[A-Z]{3}$"
+        }
+      }
+    }
+  }
+}
