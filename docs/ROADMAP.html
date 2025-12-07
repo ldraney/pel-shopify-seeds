@@ -40,6 +40,7 @@
         }
         .phase.complete .phase-number { background: #28a745; }
         .phase.current .phase-number { background: #ffc107; color: #333; }
+        .phase.legacy .phase-number { background: #6c757d; }
         .issue-link {
             background: #e9ecef;
             padding: 0.25rem 0.5rem;
@@ -71,12 +72,44 @@
         table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
         th, td { border: 1px solid #ddd; padding: 0.75rem; text-align: left; }
         th { background: #f8f9fa; }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
     </style>
 </head>
 <body>
     <h1>PEL Shopify Seeds - Roadmap</h1>
 
-    <p>This document outlines the implementation phases for the pel-shopify-seeds repository.</p>
+    <p>This repo provides CSV data + API response schemas for pel-shopify-views to consume.</p>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart LR
+    subgraph seeds["pel-shopify-seeds"]
+        CSV[products.csv]
+        TYPES[api/types.js]
+        INTRO[src/introspect.js]
+    end
+
+    subgraph views["pel-shopify-views"]
+        PARSE[Parse CSV]
+        APICALL[Call Shopify API]
+        BUILD[Build SQLite]
+    end
+
+    SHOPIFY[(Shopify API)] --> INTRO
+    INTRO --> TYPES
+    CSV --> PARSE
+    TYPES --> APICALL
+    SHOPIFY --> APICALL
+    PARSE --> BUILD
+    APICALL --> BUILD
+    BUILD --> DB[(catalog.sqlite)]
+        </pre>
+    </div>
 
     <div class="diagram-container">
         <pre class="mermaid">
@@ -87,11 +120,13 @@ gantt
     Documentation & Architecture     :done, p1, 2024-01-01, 1d
     section Phase 2
     First Release (CSV)              :done, p2, after p1, 1d
-    section Phase 3
-    Collections Schema               :p3a, after p2, 2d
-    Inventory Schema                 :p3b, after p2, 2d
+    section Phase 3 (Legacy)
+    Collections JSON                 :done, p3a, after p2, 1d
+    Inventory JSON                   :done, p3b, after p2, 1d
     section Phase 4
-    pel-shopify-views integration    :p4, after p3a p3b, 3d
+    Schema Introspection             :active, p4, after p3a p3b, 2d
+    section Phase 5
+    pel-shopify-views integration    :p5, after p4, 3d
         </pre>
     </div>
 
@@ -110,7 +145,6 @@ gantt
                 <li><code>docs/architecture.html</code> - System architecture with Mermaid diagrams</li>
                 <li>Shopify Admin API reference (queries, types, fields)</li>
                 <li>CSV vs API data split analysis</li>
-                <li>SQLite schema design for pel-shopify-views</li>
             </ul>
         </div>
     </div>
@@ -126,135 +160,99 @@ gantt
         <div class="deliverables">
             <strong>Deliverables:</strong>
             <ul>
-                <li>Validated <code>data/products.csv</code></li>
-                <li>GitHub Release v0.1.0 with CSV attached</li>
-                <li>Release process documented in README</li>
-            </ul>
-            <strong>Agent Instructions:</strong>
-            <ul>
-                <li>The CSV is already in <code>data/products.csv</code></li>
-                <li>Validate it has expected columns (65 total, see architecture.html)</li>
-                <li>Use <code>gh release create v0.1.0 data/products.csv</code></li>
-                <li>Add release notes describing contents</li>
+                <li>Validated <code>data/products.csv</code> (65 columns, 1656 products)</li>
+                <li>GitHub Release v0.1.0, v0.2.0 with CSV attached</li>
             </ul>
         </div>
     </div>
 
-    <div class="phase">
+    <div class="phase legacy">
         <div class="phase-header">
             <div class="phase-number">3</div>
-            <h3>API Schemas</h3>
+            <h3>Legacy: JSON Data Files</h3>
             <a href="https://github.com/ldraney/pel-shopify-seeds/issues/1" class="issue-link">Issue #1</a>
             <a href="https://github.com/ldraney/pel-shopify-seeds/issues/3" class="issue-link">Issue #3</a>
+            <span style="color: #6c757d; font-weight: bold;">SUPERSEDED</span>
         </div>
-        <p>Define JSON schemas for data that requires API calls.</p>
+        <div class="note">
+            <strong>Architecture Change:</strong> We originally planned to store JSON data files here.
+            Instead, seeds will provide <strong>schema definitions</strong> and views will call the Shopify API directly.
+            The JSON files created are legacy and will be replaced by <code>api/types.js</code>.
+        </div>
+        <div class="deliverables">
+            <strong>Legacy Files (to be replaced):</strong>
+            <ul>
+                <li><code>api/collections.json</code> - Example data (Issue #1)</li>
+                <li><code>api/collections.schema.json</code> - JSON Schema</li>
+                <li><code>api/inventory.json</code> - Example data (Issue #3)</li>
+                <li><code>api/inventory.schema.json</code> - JSON Schema</li>
+            </ul>
+        </div>
+    </div>
 
-        <h4>3a. Collections Schema (Issue #1) <span style="color: #28a745; font-weight: bold;">COMPLETE</span></h4>
+    <div class="phase current">
+        <div class="phase-header">
+            <div class="phase-number">4</div>
+            <h3>Schema Introspection</h3>
+            <a href="https://github.com/ldraney/pel-shopify-seeds/issues/7" class="issue-link">Issue #7</a>
+        </div>
+        <p>Introspect Shopify GraphQL API to generate response schemas that views can use to create matching SQLite tables.</p>
         <div class="deliverables">
             <strong>Deliverables:</strong>
             <ul>
-                <li><code>api/collections.schema.json</code> - JSON Schema definition</li>
-                <li><code>api/collections.json</code> - Example collection data</li>
-            </ul>
-            <strong>Agent Instructions:</strong>
-            <ul>
-                <li>Reference <code>docs/architecture.html</code> Collection type</li>
-                <li>Schema must support:
+                <li><code>src/introspect.js</code> - Script to call Shopify API and extract types</li>
+                <li><code>api/types.js</code> - Generated response schemas for:
                     <ul>
-                        <li>Manual collections (explicit product list)</li>
-                        <li>Smart collections (rule-based with <code>ruleSet</code>)</li>
-                        <li>Collection metafields</li>
-                    </ul>
-                </li>
-                <li>Use JSON Schema draft-07</li>
-                <li>Validate against Shopify's <code>CollectionInput</code> type</li>
-            </ul>
-            <strong>Example Structure:</strong>
-            <pre><code>{
-  "collections": [
-    {
-      "handle": "summer-sale",
-      "title": "Summer Sale",
-      "descriptionHtml": "&lt;p&gt;Hot deals!&lt;/p&gt;",
-      "sortOrder": "BEST_SELLING",
-      "ruleSet": {
-        "appliedDisjunctively": false,
-        "rules": [
-          { "column": "TAG", "relation": "EQUALS", "condition": "sale" }
-        ]
-      }
-    }
-  ]
-}</code></pre>
-        </div>
-
-        <h4>3b. Inventory Schema (Issue #3) - <span style="color: #28a745; font-weight: bold;">COMPLETE</span></h4>
-        <div class="deliverables">
-            <strong>Deliverables:</strong>
-            <ul>
-                <li><code>api/inventory.schema.json</code> - JSON Schema definition</li>
-                <li><code>api/inventory.json</code> - Example inventory data</li>
-            </ul>
-            <strong>Agent Instructions:</strong>
-            <ul>
-                <li>Reference <code>docs/architecture.html</code> InventoryItem and InventoryLevel types</li>
-                <li>Schema must support:
-                    <ul>
-                        <li>SKU-based inventory identification</li>
-                        <li>Multiple locations per SKU</li>
-                        <li>Quantity per location</li>
-                        <li>Optional: countryCodeOfOrigin, harmonizedSystemCode</li>
+                        <li>Collection</li>
+                        <li>InventoryItem</li>
+                        <li>InventoryLevel</li>
+                        <li>Location</li>
                     </ul>
                 </li>
             </ul>
-            <strong>Example Structure:</strong>
-            <pre><code>{
-  "inventory": [
-    {
-      "sku": "PROD-001-SM",
-      "tracked": true,
-      "countryCodeOfOrigin": "US",
-      "levels": [
-        { "locationName": "Warehouse A", "quantity": 100 },
-        { "locationName": "Store NYC", "quantity": 25 }
-      ]
-    }
-  ]
-}</code></pre>
+            <strong>Why introspection?</strong>
+            <ul>
+                <li>Ensures schemas match actual Shopify API responses</li>
+                <li>Views can create SQLite tables that exactly match API response structure</li>
+                <li>No manual schema maintenance - regenerate when API changes</li>
+            </ul>
         </div>
     </div>
 
     <div class="phase">
         <div class="phase-header">
-            <div class="phase-number">4</div>
+            <div class="phase-number">5</div>
             <h3>Integration with pel-shopify-views</h3>
         </div>
-        <p>Ensure the seeds repo output is consumable by pel-shopify-views.</p>
+        <p>Ensure seeds releases are consumable by pel-shopify-views.</p>
         <div class="deliverables">
             <strong>Deliverables:</strong>
             <ul>
-                <li>GitHub Action to auto-trigger pel-shopify-views on release</li>
-                <li>Release includes all data: CSV + JSON API definitions</li>
-                <li>Documentation for downstream consumption</li>
+                <li>Release v0.3.0 with CSV + api/types.js</li>
+                <li>Views repo successfully builds SQLite from seeds release</li>
+                <li>Documentation for release process</li>
             </ul>
         </div>
     </div>
 
-    <h2>File Structure After Completion</h2>
+    <h2>Updated File Structure</h2>
     <pre><code>pel-shopify-seeds/
 ├── .github/
-│   └── workflows/
-│       └── release.yml          # Triggers pel-shopify-views
+│   ├── release.yml
+│   └── RELEASE_CHECKLIST.md
 ├── .gitignore
 ├── CLAUDE.md
 ├── README.md
 ├── data/                        # gitignored
-│   └── products.csv
+│   └── products.csv             # 65 columns, 1656 products
 ├── api/
-│   ├── collections.schema.json
-│   ├── collections.json
-│   ├── inventory.schema.json
-│   └── inventory.json
+│   ├── types.js                 # NEW: Generated from introspection
+│   ├── collections.json         # LEGACY: To be removed
+│   ├── collections.schema.json  # LEGACY: To be removed
+│   ├── inventory.json           # LEGACY: To be removed
+│   └── inventory.schema.json    # LEGACY: To be removed
+├── src/
+│   └── introspect.js            # NEW: Schema introspection script
 └── docs/
     ├── architecture.html
     └── ROADMAP.html</code></pre>
@@ -264,19 +262,39 @@ gantt
     <div class="diagram-container">
         <pre class="mermaid">
 flowchart TD
-    I2[Issue #2: First Release] --> I1[Issue #1: Collections Schema]
-    I2 --> I3[Issue #3: Inventory Schema]
-    I1 --> I4[Phase 4: Integration]
-    I3 --> I4
+    I2[Issue #2: First Release] --> I1[Issue #1: Collections JSON]
+    I2 --> I3[Issue #3: Inventory JSON]
+    I1 --> I7[Issue #7: Schema Introspection]
+    I3 --> I7
+    I7 --> I5[Phase 5: Integration]
 
     style I2 fill:#28a745
-    style I1 fill:#e9ecef
-    style I3 fill:#28a745
-    style I4 fill:#e9ecef
+    style I1 fill:#6c757d
+    style I3 fill:#6c757d
+    style I7 fill:#ffc107
+    style I5 fill:#e9ecef
         </pre>
     </div>
 
-    <p><strong>Issue #2 should be completed first</strong> - it establishes the release process that Issues #1 and #3 will build upon.</p>
+    <h2>What Seeds Provides to Views</h2>
+
+    <table>
+        <thead>
+            <tr><th>Asset</th><th>Purpose</th><th>Views Usage</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>products.csv</code></td>
+                <td>Product data export</td>
+                <td>Parse into <code>products_raw</code> table</td>
+            </tr>
+            <tr>
+                <td><code>api/types.js</code></td>
+                <td>API response schemas</td>
+                <td>Create matching tables, validate API responses</td>
+            </tr>
+        </tbody>
+    </table>
 
     <script>
         mermaid.initialize({
