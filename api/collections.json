@@ -1,0 +1,127 @@
+{
+  "collections": [
+    {
+      "handle": "all-products",
+      "title": "All Products",
+      "descriptionHtml": "<p>Browse our complete catalog of skincare products.</p>",
+      "sortOrder": "BEST_SELLING",
+      "seo": {
+        "title": "All Products | PEL Skincare",
+        "description": "Shop our complete collection of premium skincare products."
+      }
+    },
+    {
+      "handle": "summer-sale",
+      "title": "Summer Sale",
+      "descriptionHtml": "<p>Hot deals for summer! Limited time offers on select products.</p>",
+      "sortOrder": "PRICE_ASC",
+      "ruleSet": {
+        "appliedDisjunctively": false,
+        "rules": [
+          {
+            "column": "TAG",
+            "relation": "EQUALS",
+            "condition": "sale"
+          },
+          {
+            "column": "TAG",
+            "relation": "EQUALS",
+            "condition": "summer"
+          }
+        ]
+      },
+      "seo": {
+        "title": "Summer Sale | PEL Skincare",
+        "description": "Shop our summer sale for great deals on skincare essentials."
+      },
+      "metafields": [
+        {
+          "namespace": "custom",
+          "key": "banner_color",
+          "value": "#ff6600",
+          "type": "color"
+        },
+        {
+          "namespace": "custom",
+          "key": "sale_end_date",
+          "value": "2024-08-31",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "handle": "moisturizers",
+      "title": "Moisturizers",
+      "descriptionHtml": "<p>Hydrate and nourish your skin with our premium moisturizers.</p>",
+      "sortOrder": "MANUAL",
+      "products": [
+        "daily-hydrating-cream",
+        "night-repair-moisturizer",
+        "lightweight-gel-moisturizer",
+        "rich-body-butter"
+      ],
+      "image": {
+        "src": "https://cdn.shopify.com/s/files/collections/moisturizers.jpg",
+        "altText": "Collection of moisturizing skincare products"
+      },
+      "seo": {
+        "title": "Moisturizers | PEL Skincare",
+        "description": "Discover our range of hydrating moisturizers for all skin types."
+      }
+    },
+    {
+      "handle": "under-50",
+      "title": "Under $50",
+      "descriptionHtml": "<p>Quality skincare that won't break the bank.</p>",
+      "sortOrder": "PRICE_ASC",
+      "ruleSet": {
+        "appliedDisjunctively": false,
+        "rules": [
+          {
+            "column": "VARIANT_PRICE",
+            "relation": "LESS_THAN",
+            "condition": "50.00"
+          }
+        ]
+      },
+      "seo": {
+        "title": "Skincare Under $50 | PEL Skincare",
+        "description": "Affordable skincare products under $50."
+      }
+    },
+    {
+      "handle": "sensitive-skin",
+      "title": "Sensitive Skin",
+      "descriptionHtml": "<p>Gentle formulas designed for sensitive skin types.</p>",
+      "sortOrder": "BEST_SELLING",
+      "ruleSet": {
+        "appliedDisjunctively": true,
+        "rules": [
+          {
+            "column": "TAG",
+            "relation": "EQUALS",
+            "condition": "sensitive"
+          },
+          {
+            "column": "TAG",
+            "relation": "EQUALS",
+            "condition": "gentle"
+          },
+          {
+            "column": "TAG",
+            "relation": "EQUALS",
+            "condition": "fragrance-free"
+          }
+        ]
+      },
+      "metafields": [
+        {
+          "namespace": "custom",
+          "key": "skin_type",
+          "value": "sensitive",
+          "type": "single_line_text_field"
+        }
+      ]
+    }
+  ]
+}

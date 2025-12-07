@@ -1,0 +1,207 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/ldraney/pel-shopify-seeds/api/collections.schema.json",
+  "title": "Shopify Collections",
+  "description": "Schema for Shopify collection definitions. Supports both manual and smart (rule-based) collections.",
+  "type": "object",
+  "required": ["collections"],
+  "properties": {
+    "collections": {
+      "type": "array",
+      "description": "Array of collection definitions",
+      "items": {
+        "$ref": "#/definitions/collection"
+      }
+    }
+  },
+  "definitions": {
+    "collection": {
+      "type": "object",
+      "description": "A Shopify collection (manual or smart)",
+      "required": ["handle", "title"],
+      "properties": {
+        "handle": {
+          "type": "string",
+          "description": "URL-friendly identifier for the collection",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Display name of the collection",
+          "minLength": 1
+        },
+        "descriptionHtml": {
+          "type": "string",
+          "description": "HTML description of the collection"
+        },
+        "image": {
+          "$ref": "#/definitions/image",
+          "description": "Collection image"
+        },
+        "seo": {
+          "$ref": "#/definitions/seo",
+          "description": "SEO metadata for the collection"
+        },
+        "sortOrder": {
+          "$ref": "#/definitions/collectionSortOrder",
+          "description": "How products are sorted in the collection"
+        },
+        "ruleSet": {
+          "$ref": "#/definitions/collectionRuleSet",
+          "description": "Rules for smart collections (omit for manual collections)"
+        },
+        "products": {
+          "type": "array",
+          "description": "Product handles for manual collections (ignored if ruleSet is present)",
+          "items": {
+            "type": "string",
+            "description": "Product handle"
+          }
+        },
+        "metafields": {
+          "type": "array",
+          "description": "Collection metafields",
+          "items": {
+            "$ref": "#/definitions/metafield"
+          }
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "description": "Image reference",
+      "properties": {
+        "src": {
+          "type": "string",
+          "description": "Image URL",
+          "format": "uri"
+        },
+        "altText": {
+          "type": "string",
+          "description": "Alt text for accessibility"
+        }
+      }
+    },
+    "seo": {
+      "type": "object",
+      "description": "SEO metadata",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "SEO title (page title tag)"
+        },
+        "description": {
+          "type": "string",
+          "description": "SEO description (meta description)"
+        }
+      }
+    },
+    "collectionSortOrder": {
+      "type": "string",
+      "description": "Sort order for products in the collection",
+      "enum": [
+        "ALPHA_ASC",
+        "ALPHA_DESC",
+        "BEST_SELLING",
+        "CREATED",
+        "CREATED_DESC",
+        "MANUAL",
+        "PRICE_ASC",
+        "PRICE_DESC"
+      ]
+    },
+    "collectionRuleSet": {
+      "type": "object",
+      "description": "Rules for smart collections",
+      "required": ["appliedDisjunctively", "rules"],
+      "properties": {
+        "appliedDisjunctively": {
+          "type": "boolean",
+          "description": "If true, products match ANY rule (OR). If false, products must match ALL rules (AND)."
+        },
+        "rules": {
+          "type": "array",
+          "description": "Collection rules",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/collectionRule"
+          }
+        }
+      }
+    },
+    "collectionRule": {
+      "type": "object",
+      "description": "A single rule for smart collection matching",
+      "required": ["column", "relation", "condition"],
+      "properties": {
+        "column": {
+          "$ref": "#/definitions/collectionRuleColumn",
+          "description": "The product property to match against"
+        },
+        "relation": {
+          "$ref": "#/definitions/collectionRuleRelation",
+          "description": "The comparison operator"
+        },
+        "condition": {
+          "type": "string",
+          "description": "The value to compare against"
+        }
+      }
+    },
+    "collectionRuleColumn": {
+      "type": "string",
+      "description": "Product property for rule matching",
+      "enum": [
+        "TAG",
+        "TITLE",
+        "TYPE",
+        "VENDOR",
+        "VARIANT_PRICE",
+        "VARIANT_COMPARE_AT_PRICE",
+        "VARIANT_WEIGHT",
+        "VARIANT_INVENTORY",
+        "VARIANT_TITLE"
+      ]
+    },
+    "collectionRuleRelation": {
+      "type": "string",
+      "description": "Comparison operator for rules",
+      "enum": [
+        "EQUALS",
+        "NOT_EQUALS",
+        "GREATER_THAN",
+        "LESS_THAN",
+        "STARTS_WITH",
+        "ENDS_WITH",
+        "CONTAINS",
+        "NOT_CONTAINS"
+      ]
+    },
+    "metafield": {
+      "type": "object",
+      "description": "A metafield key-value pair",
+      "required": ["namespace", "key", "value", "type"],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "description": "Metafield namespace",
+          "minLength": 1
+        },
+        "key": {
+          "type": "string",
+          "description": "Metafield key within the namespace",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string",
+          "description": "Metafield value"
+        },
+        "type": {
+          "type": "string",
+          "description": "Metafield type (e.g., single_line_text_field, color, number_integer)",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
