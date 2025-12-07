@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopify Schema Introspection</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        h1, h2, h3 { color: #333; }
+        .diagram-container {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        code {
+            background: #e9ecef;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+        }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 0.75rem; text-align: left; }
+        th { background: #f8f9fa; }
+        .note {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #856404;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Shopify Schema Introspection</h1>
+
+    <p>This document explains how <code>src/introspect.js</code> generates <code>api/types.js</code>
+    by querying the Shopify Admin GraphQL API schema.</p>
+
+    <h2>Overview</h2>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart LR
+    subgraph shopify["Shopify Admin API"]
+        SCHEMA[(GraphQL Schema)]
+    end
+
+    subgraph seeds["pel-shopify-seeds"]
+        INTRO[src/introspect.js]
+        TYPES[api/types.js]
+    end
+
+    subgraph views["pel-shopify-views"]
+        TABLES[SQLite Tables]
+        FETCH[API Fetcher]
+    end
+
+    SCHEMA -->|"__type introspection"| INTRO
+    INTRO -->|"generates"| TYPES
+    TYPES -->|"defines table schema"| TABLES
+    TYPES -->|"validates responses"| FETCH
+    SCHEMA -->|"GET data"| FETCH
+    FETCH -->|"inserts"| TABLES
+        </pre>
+    </div>
+
+    <h2>How It Works</h2>
+
+    <div class="section">
+        <h3>Step 1: GraphQL Introspection Query</h3>
+        <p>The script uses GraphQL's built-in introspection system to query type metadata:</p>
+
+        <pre><code>query IntrospectType($typeName: String!) {
+  __type(name: $typeName) {
+    name
+    kind
+    description
+    fields {
+      name
+      description
+      type {
+        name
+        kind
+        ofType { name kind ofType { name kind } }
+      }
+    }
+  }
+}</code></pre>
+
+        <p>This query returns the complete structure of any type in the Shopify schema.</p>
+    </div>
+
+    <div class="section">
+        <h3>Step 2: Types Introspected</h3>
+        <p>The script queries these product-related types:</p>
+
+        <table>
+            <thead>
+                <tr><th>Type</th><th>Query</th><th>API Scope</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>Product</code></td>
+                    <td><code>products</code> / <code>product(id:)</code></td>
+                    <td>read_products</td>
+                    <td>Product details, title, description, status</td>
+                </tr>
+                <tr>
+                    <td><code>ProductVariant</code></td>
+                    <td><code>productVariants</code></td>
+                    <td>read_products</td>
+                    <td>SKU, price, inventory, options</td>
+                </tr>
+                <tr>
+                    <td><code>Collection</code></td>
+                    <td><code>collections</code></td>
+                    <td>read_products</td>
+                    <td>Manual and smart collections</td>
+                </tr>
+                <tr>
+                    <td><code>InventoryItem</code></td>
+                    <td><code>inventoryItems</code></td>
+                    <td>read_inventory</td>
+                    <td>HS codes, country of origin, tracking</td>
+                </tr>
+                <tr>
+                    <td><code>InventoryLevel</code></td>
+                    <td>via <code>inventoryItem.inventoryLevels</code></td>
+                    <td>read_inventory</td>
+                    <td>Quantity per location</td>
+                </tr>
+                <tr>
+                    <td><code>Location</code></td>
+                    <td><code>locations</code></td>
+                    <td>read_locations</td>
+                    <td>Warehouses, stores, addresses</td>
+                </tr>
+                <tr>
+                    <td><code>Metafield</code></td>
+                    <td>via parent object</td>
+                    <td>varies</td>
+                    <td>Custom fields on any resource</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h3>Step 3: Generate types.js</h3>
+        <p>For each type, the script extracts:</p>
+        <ul>
+            <li><strong>Field name</strong> - The GraphQL field name</li>
+            <li><strong>Type</strong> - Full type signature (e.g., <code>String!</code>, <code>[ProductVariant!]!</code>)</li>
+            <li><strong>Base type</strong> - Underlying scalar or object type</li>
+            <li><strong>Required</strong> - Whether field is non-null</li>
+            <li><strong>List</strong> - Whether field returns an array</li>
+            <li><strong>Description</strong> - Documentation from Shopify</li>
+        </ul>
+
+        <p>Example output for a field:</p>
+        <pre><code>{
+  "handle": {
+    "type": "String!",
+    "baseType": "String",
+    "required": true,
+    "list": false,
+    "description": "A unique human-friendly string of the product's title."
+  }
+}</code></pre>
+    </div>
+
+    <h2>Data Flow</h2>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+sequenceDiagram
+    participant Dev as Developer
+    participant Script as introspect.js
+    participant Shopify as Shopify GraphQL API
+    participant Types as api/types.js
+    participant Views as pel-shopify-views
+
+    Dev->>Script: Run with credentials
+    loop For each type
+        Script->>Shopify: __type(name: "Product")
+        Shopify-->>Script: Field definitions
+    end
+    Script->>Types: Generate types.js
+
+    Note over Types: Released with seeds
+
+    Views->>Types: Import schema definitions
+    Views->>Shopify: GET collections, inventory, etc.
+    Shopify-->>Views: JSON responses
+    Views->>Views: Validate against types.js
+    Views->>Views: Create SQLite tables from schema
+    Views->>Views: Insert data
+        </pre>
+    </div>
+
+    <h2>Usage</h2>
+
+    <div class="section">
+        <h3>Running the Introspection Script</h3>
+
+        <pre><code># Set environment variables
+export SHOPIFY_STORE_URL=your-store.myshopify.com
+export SHOPIFY_ACCESS_TOKEN=shpat_xxxxx
+
+# Run introspection
+node src/introspect.js</code></pre>
+
+        <p>Or inline:</p>
+        <pre><code>SHOPIFY_STORE_URL=your-store.myshopify.com \
+SHOPIFY_ACCESS_TOKEN=shpat_xxx \
+node src/introspect.js</code></pre>
+
+        <div class="note">
+            <strong>Note:</strong> The access token needs at minimum these scopes:
+            <code>read_products</code>, <code>read_inventory</code>, <code>read_locations</code>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Output</h3>
+        <p>The script generates <code>api/types.js</code> with this structure:</p>
+
+        <pre><code>module.exports = {
+  generatedAt: "2025-12-07T...",
+  apiVersion: "2024-01",
+  store: "your-store.myshopify.com",
+  types: {
+    Product: { name, kind, description, fields: {...} },
+    Collection: { ... },
+    InventoryItem: { ... },
+    // ...
+  },
+  queryMappings: {
+    Product: { listQuery: "products", singleQuery: "product(id:)", scope: "..." },
+    // ...
+  }
+};</code></pre>
+    </div>
+
+    <h2>How Views Uses types.js</h2>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    subgraph seeds_release["Seeds Release"]
+        CSV[products.csv]
+        TYPES[api/types.js]
+    end
+
+    subgraph views_process["Views Build Process"]
+        DOWNLOAD[Download Release]
+        PARSE_TYPES[Parse types.js]
+        CREATE_TABLES[Create SQLite Tables]
+        PARSE_CSV[Parse CSV]
+        CALL_API[Call Shopify API]
+        INSERT[Insert Data]
+    end
+
+    subgraph sqlite["catalog.sqlite"]
+        T1[products_raw]
+        T2[collections]
+        T3[inventory_items]
+        T4[inventory_levels]
+        T5[locations]
+    end
+
+    CSV --> DOWNLOAD
+    TYPES --> DOWNLOAD
+    DOWNLOAD --> PARSE_TYPES
+    DOWNLOAD --> PARSE_CSV
+    PARSE_TYPES --> CREATE_TABLES
+    CREATE_TABLES --> T2
+    CREATE_TABLES --> T3
+    CREATE_TABLES --> T4
+    CREATE_TABLES --> T5
+    PARSE_CSV --> INSERT
+    CALL_API --> INSERT
+    INSERT --> T1
+    INSERT --> T2
+    INSERT --> T3
+    INSERT --> T4
+    INSERT --> T5
+        </pre>
+    </div>
+
+    <div class="section">
+        <h3>Table Creation from types.js</h3>
+        <p>Views reads the field definitions and creates matching SQLite tables:</p>
+
+        <pre><code>// Example: Creating collections table from types.js
+const { types } = require('./types.js');
+const collectionFields = types.Collection.fields;
+
+// Generate CREATE TABLE statement
+let sql = 'CREATE TABLE collections (\n';
+for (const [fieldName, fieldDef] of Object.entries(collectionFields)) {
+  const sqlType = mapGraphQLToSQLite(fieldDef.baseType);
+  sql += `  ${toSnakeCase(fieldName)} ${sqlType},\n`;
+}
+sql += ')';
+
+// Result:
+// CREATE TABLE collections (
+//   id TEXT PRIMARY KEY,
+//   handle TEXT,
+//   title TEXT,
+//   description_html TEXT,
+//   ...
+// );</code></pre>
+    </div>
+
+    <h2>Why Introspection?</h2>
+
+    <div class="section">
+        <table>
+            <thead>
+                <tr><th>Benefit</th><th>Explanation</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Always accurate</strong></td>
+                    <td>Schema comes directly from Shopify's live API</td>
+                </tr>
+                <tr>
+                    <td><strong>Complete</strong></td>
+                    <td>All fields captured, not just manually documented ones</td>
+                </tr>
+                <tr>
+                    <td><strong>Self-documenting</strong></td>
+                    <td>Descriptions included from API documentation</td>
+                </tr>
+                <tr>
+                    <td><strong>Versionable</strong></td>
+                    <td>Regenerate when API version changes (2024-01 → 2024-04)</td>
+                </tr>
+                <tr>
+                    <td><strong>Type-safe</strong></td>
+                    <td>Views can validate API responses match expected schema</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="warning">
+            <strong>When to regenerate:</strong>
+            <ul>
+                <li>Upgrading Shopify API version</li>
+                <li>Shopify adds new fields you need</li>
+                <li>Building for a different store with custom types</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Files</h2>
+
+    <table>
+        <thead>
+            <tr><th>File</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>src/introspect.js</code></td>
+                <td>Script that queries Shopify and generates types.js</td>
+            </tr>
+            <tr>
+                <td><code>api/types.js</code></td>
+                <td>Generated schema definitions for all product-related types</td>
+            </tr>
+            <tr>
+                <td><code>docs/introspection.html</code></td>
+                <td>This documentation</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default'
+        });
+    </script>
+</body>
+</html>
