@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEL Shopify Automation Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        h1, h2, h3 { color: #333; }
+        .diagram-container {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .question {
+            background: #cce5ff;
+            border-left: 4px solid #007bff;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            text-align: left;
+        }
+        th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>PEL Shopify Automation Architecture</h1>
+
+    <h2>Overview: The Three-Repo System</h2>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart LR
+    subgraph seeds["pel-shopify-seeds"]
+        CSV[CSV Files]
+        API[API Call Definitions]
+        REL1[GitHub Release]
+    end
+
+    subgraph views["pel-shopify-views"]
+        INGEST[Ingest Release Assets]
+        SQLITE[(SQLite DB)]
+        REL2[GitHub Release + DB]
+    end
+
+    subgraph update["pel-shopify-update"]
+        CONSUME[Consume Seeded DB]
+        SYNC[Sync to Shopify]
+    end
+
+    CSV --> REL1
+    API --> REL1
+    REL1 -->|"download artifacts"| INGEST
+    INGEST --> SQLITE
+    SQLITE --> REL2
+    REL2 -->|"download seeded DB"| CONSUME
+    CONSUME --> SYNC
+    SYNC -->|"CSV Import + API Calls"| SHOPIFY[(Shopify Store)]
+        </pre>
+    </div>
+
+    <h2>Repo 1: pel-shopify-seeds</h2>
+    <p>This repo is the <strong>source of truth</strong> for your catalog data.</p>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    subgraph sources["Data Sources"]
+        MANUAL[Manual Edits]
+        SCRIPTS[Generation Scripts]
+    end
+
+    subgraph outputs["Release Artifacts"]
+        PRODUCTS[products.csv]
+        VARIANTS[variants.csv]
+        IMAGES[images.csv]
+        META[metafields.json]
+        COLLECTIONS[collections.json]
+    end
+
+    MANUAL --> PRODUCTS
+    MANUAL --> VARIANTS
+    SCRIPTS --> IMAGES
+    SCRIPTS --> META
+    SCRIPTS --> COLLECTIONS
+
+    PRODUCTS --> RELEASE[GitHub Release v1.0.0]
+    VARIANTS --> RELEASE
+    IMAGES --> RELEASE
+    META --> RELEASE
+    COLLECTIONS --> RELEASE
+        </pre>
+    </div>
+
+    <h3>What Goes Where: CSV vs API</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Data Type</th>
+                <th>Method</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Products (title, description, vendor, type)</td>
+                <td>CSV</td>
+                <td>Bulk import supported</td>
+            </tr>
+            <tr>
+                <td>Variants (price, SKU, inventory)</td>
+                <td>CSV</td>
+                <td>Bulk import supported</td>
+            </tr>
+            <tr>
+                <td>Basic Product Images</td>
+                <td>CSV</td>
+                <td>Image URLs in CSV work</td>
+            </tr>
+            <tr>
+                <td>Metafields</td>
+                <td>API</td>
+                <td>Not supported in standard CSV import</td>
+            </tr>
+            <tr>
+                <td>Collections</td>
+                <td>API</td>
+                <td>Smart/automated collections need API</td>
+            </tr>
+            <tr>
+                <td>Product Tags (bulk)</td>
+                <td>CSV</td>
+                <td>Comma-separated in CSV</td>
+            </tr>
+            <tr>
+                <td>Inventory Locations</td>
+                <td>API</td>
+                <td>Multi-location needs API</td>
+            </tr>
+            <tr>
+                <td>Product Options</td>
+                <td>CSV</td>
+                <td>Option1 Name/Value columns</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="question">
+        <strong>Open Question:</strong> What specific metafields or collection types do you need? This will determine the exact API calls required.
+    </div>
+
+    <h2>Repo 2: pel-shopify-views</h2>
+    <p>This repo <strong>transforms</strong> the seed data into a queryable SQLite database.</p>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    subgraph input["Input: Download from pel-shopify-seeds release"]
+        DL[Download Release Assets]
+    end
+
+    subgraph process["Processing"]
+        PARSE_CSV[Parse CSVs]
+        PARSE_JSON[Parse JSON API definitions]
+        SCHEMA[Create Schema]
+        INSERT[Insert Data]
+    end
+
+    subgraph output["Output"]
+        DB[(catalog.sqlite)]
+        REL[GitHub Release]
+    end
+
+    DL --> PARSE_CSV
+    DL --> PARSE_JSON
+    PARSE_CSV --> SCHEMA
+    PARSE_JSON --> SCHEMA
+    SCHEMA --> INSERT
+    INSERT --> DB
+    DB --> REL
+        </pre>
+    </div>
+
+    <h3>Proposed SQLite Schema</h3>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+erDiagram
+    products {
+        text handle PK
+        text title
+        text body_html
+        text vendor
+        text product_type
+        text tags
+        text status
+    }
+
+    variants {
+        text sku PK
+        text product_handle FK
+        text option1_value
+        text option2_value
+        real price
+        real compare_at_price
+        int inventory_qty
+    }
+
+    images {
+        int id PK
+        text product_handle FK
+        text src_url
+        int position
+        text alt_text
+    }
+
+    metafields {
+        int id PK
+        text owner_handle FK
+        text namespace
+        text key
+        text value
+        text type
+    }
+
+    collections {
+        text handle PK
+        text title
+        text body_html
+        text collection_type
+        text rules_json
+    }
+
+    products ||--o{ variants : "has"
+    products ||--o{ images : "has"
+    products ||--o{ metafields : "has"
+    collections ||--o{ metafields : "has"
+        </pre>
+    </div>
+
+    <h2>Repo 3: pel-shopify-update</h2>
+    <p>This repo <strong>executes</strong> the updates against Shopify.</p>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+flowchart TD
+    subgraph input["Input"]
+        DB[(catalog.sqlite from pel-shopify-views)]
+    end
+
+    subgraph process["Update Process"]
+        DIFF[Compare with current Shopify state]
+        GEN_CSV[Generate CSV for bulk import]
+        GEN_API[Generate API mutation queue]
+    end
+
+    subgraph execute["Execution"]
+        CSV_UP[CSV Upload via Admin]
+        API_CALL[Execute GraphQL mutations]
+    end
+
+    subgraph shopify["Shopify"]
+        STORE[(Shopify Store)]
+    end
+
+    DB --> DIFF
+    DIFF --> GEN_CSV
+    DIFF --> GEN_API
+    GEN_CSV --> CSV_UP
+    GEN_API --> API_CALL
+    CSV_UP --> STORE
+    API_CALL --> STORE
+        </pre>
+    </div>
+
+    <h2>Complete Data Flow</h2>
+
+    <div class="diagram-container">
+        <pre class="mermaid">
+sequenceDiagram
+    participant Dev as Developer
+    participant Seeds as pel-shopify-seeds
+    participant Views as pel-shopify-views
+    participant Update as pel-shopify-update
+    participant Shopify as Shopify Store
+
+    Dev->>Seeds: Edit CSVs / API definitions
+    Dev->>Seeds: Push & Tag Release
+    Seeds-->>Views: GitHub Action triggers
+    Views->>Seeds: Download release assets
+    Views->>Views: Build SQLite DB
+    Views->>Views: Create release with DB
+    Views-->>Update: (Manual or automated trigger)
+    Update->>Views: Download seeded DB
+    Update->>Shopify: Fetch current state
+    Update->>Update: Calculate diff
+    Update->>Shopify: Upload CSV (products/variants)
+    Update->>Shopify: Execute API calls (metafields/collections)
+    Shopify-->>Dev: Catalog updated!
+        </pre>
+    </div>
+
+    <h2>Open Questions to Resolve</h2>
+
+    <div class="question">
+        <h3>1. What triggers the update?</h3>
+        <ul>
+            <li>Manual trigger from pel-shopify-update?</li>
+            <li>Automated on every pel-shopify-views release?</li>
+            <li>Scheduled (cron)?</li>
+        </ul>
+    </div>
+
+    <div class="question">
+        <h3>2. How do you handle Shopify IDs?</h3>
+        <p>Products in Shopify have GIDs like <code>gid://shopify/Product/12345</code>. Your CSVs use handles. Options:</p>
+        <ul>
+            <li>Use handles as the canonical identifier (Shopify matches on handle for CSV import)</li>
+            <li>Maintain a mapping table in pel-shopify-views</li>
+            <li>Query Shopify for ID resolution before API calls</li>
+        </ul>
+    </div>
+
+    <div class="question">
+        <h3>3. State management</h3>
+        <p>Should pel-shopify-update also store what it last pushed? This enables:</p>
+        <ul>
+            <li>Diffing against previous seeds (not just current Shopify state)</li>
+            <li>Rollback capability</li>
+            <li>Audit trail</li>
+        </ul>
+    </div>
+
+    <div class="question">
+        <h3>4. Environment handling</h3>
+        <p>Do you have staging/production stores? If so, how does this pipeline handle them?</p>
+    </div>
+
+    <h2>Next Steps</h2>
+    <ol>
+        <li>Finalize which data types need API vs CSV</li>
+        <li>Design the exact CSV format (Shopify has a specific schema)</li>
+        <li>Define the JSON schema for API call definitions</li>
+        <li>Set up GitHub Actions for the pipeline</li>
+        <li>Implement each repo incrementally</li>
+    </ol>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
+</body>
+</html>
