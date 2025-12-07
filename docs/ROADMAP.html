@@ -86,7 +86,7 @@ gantt
     section Phase 1
     Documentation & Architecture     :done, p1, 2024-01-01, 1d
     section Phase 2
-    First Release (CSV)              :active, p2, after p1, 1d
+    First Release (CSV)              :done, p2, after p1, 1d
     section Phase 3
     Collections Schema               :p3a, after p2, 2d
     Inventory Schema                 :p3b, after p2, 2d
@@ -115,11 +115,12 @@ gantt
         </div>
     </div>
 
-    <div class="phase current">
+    <div class="phase complete">
         <div class="phase-header">
             <div class="phase-number">2</div>
             <h3>First Release</h3>
             <a href="https://github.com/ldraney/pel-shopify-seeds/issues/2" class="issue-link">Issue #2</a>
+            <span style="color: #28a745; font-weight: bold;">COMPLETE</span>
         </div>
         <p>Create the first GitHub release with the product CSV export.</p>
         <div class="deliverables">
@@ -268,7 +269,7 @@ flowchart TD
     I1 --> I4[Phase 4: Integration]
     I3 --> I4
 
-    style I2 fill:#ffc107
+    style I2 fill:#28a745
     style I1 fill:#e9ecef
     style I3 fill:#e9ecef
     style I4 fill:#e9ecef
