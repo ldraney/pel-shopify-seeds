@@ -124,7 +124,7 @@ gantt
     Collections JSON                 :done, p3a, after p2, 1d
     Inventory JSON                   :done, p3b, after p2, 1d
     section Phase 4
-    Schema Introspection             :active, p4, after p3a p3b, 2d
+    Schema Introspection             :done, p4, after p3a p3b, 2d
     section Phase 5
     pel-shopify-views integration    :p5, after p4, 3d
         </pre>
@@ -190,11 +190,12 @@ gantt
         </div>
     </div>
 
-    <div class="phase current">
+    <div class="phase complete">
         <div class="phase-header">
             <div class="phase-number">4</div>
             <h3>Schema Introspection</h3>
             <a href="https://github.com/ldraney/pel-shopify-seeds/issues/7" class="issue-link">Issue #7</a>
+            <span style="color: #28a745; font-weight: bold;">COMPLETE</span>
         </div>
         <p>Introspect Shopify GraphQL API to generate response schemas that views can use to create matching SQLite tables.</p>
         <div class="deliverables">
